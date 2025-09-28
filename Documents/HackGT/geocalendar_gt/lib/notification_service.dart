@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
 
 class NotificationService {
   NotificationService._internal();
@@ -11,6 +12,10 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
+    if (kIsWeb) {
+      // Not supported on web – skip silently
+      return;
+    }
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iOS = DarwinInitializationSettings();
     const settings = InitializationSettings(android: android, iOS: iOS);
@@ -36,6 +41,7 @@ class NotificationService {
   }
 
   Future<void> showNotification(int id, String title, String body) async {
+    if (kIsWeb) return; // no-op on web
     const androidDetails = AndroidNotificationDetails(
       'georemind_channel',
       'GeoRemind',

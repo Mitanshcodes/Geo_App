@@ -10,6 +10,7 @@
         "cloud_firestore",
         "cupertino_icons",
         "firebase_auth",
+        "firebase_core",
         "flutter",
         "flutter_local_notifications",
         "flutter_map",
@@ -17,6 +18,7 @@
         "google_maps_flutter",
         "google_sign_in",
         "http",
+        "js",
         "latlong2",
         "provider",
         "uuid"
@@ -52,8 +54,23 @@
       ]
     },
     {
+      "name": "js",
+      "version": "0.7.2",
+      "dependencies": []
+    },
+    {
+      "name": "firebase_core",
+      "version": "4.1.1",
+      "dependencies": [
+        "firebase_core_platform_interface",
+        "firebase_core_web",
+        "flutter",
+        "meta"
+      ]
+    },
+    {
       "name": "firebase_auth",
-      "version": "4.16.0",
+      "version": "6.1.0",
       "dependencies": [
         "firebase_auth_platform_interface",
         "firebase_auth_web",
@@ -65,7 +82,7 @@
     },
     {
       "name": "google_sign_in",
-      "version": "5.4.4",
+      "version": "7.2.0",
       "dependencies": [
         "flutter",
         "google_sign_in_android",
@@ -108,7 +125,7 @@
     },
     {
       "name": "cloud_firestore",
-      "version": "4.17.5",
+      "version": "6.0.2",
       "dependencies": [
         "cloud_firestore_platform_interface",
         "cloud_firestore_web",
@@ -283,8 +300,19 @@
       ]
     },
     {
+      "name": "firebase_core_web",
+      "version": "3.1.1",
+      "dependencies": [
+        "firebase_core_platform_interface",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "web"
+      ]
+    },
+    {
       "name": "firebase_core_platform_interface",
-      "version": "5.4.2",
+      "version": "6.0.1",
       "dependencies": [
         "collection",
         "flutter",
@@ -294,18 +322,8 @@
       ]
     },
     {
-      "name": "firebase_core",
-      "version": "2.32.0",
-      "dependencies": [
-        "firebase_core_platform_interface",
-        "firebase_core_web",
-        "flutter",
-        "meta"
-      ]
-    },
-    {
       "name": "firebase_auth_web",
-      "version": "5.8.13",
+      "version": "6.0.3",
       "dependencies": [
         "firebase_auth_platform_interface",
         "firebase_core",
@@ -313,35 +331,38 @@
         "flutter",
         "flutter_web_plugins",
         "http_parser",
-        "js",
-        "meta"
+        "meta",
+        "web"
       ]
     },
     {
       "name": "firebase_auth_platform_interface",
-      "version": "7.3.0",
+      "version": "8.1.2",
       "dependencies": [
         "_flutterfire_internals",
         "collection",
         "firebase_core",
         "flutter",
+        "http",
         "meta",
         "plugin_platform_interface"
       ]
     },
     {
       "name": "google_sign_in_web",
-      "version": "0.10.2+1",
+      "version": "1.1.0",
       "dependencies": [
         "flutter",
         "flutter_web_plugins",
+        "google_identity_services_web",
         "google_sign_in_platform_interface",
-        "js"
+        "http",
+        "web"
       ]
     },
     {
       "name": "google_sign_in_platform_interface",
-      "version": "2.5.0",
+      "version": "3.1.0",
       "dependencies": [
         "flutter",
         "plugin_platform_interface"
@@ -349,7 +370,7 @@
     },
     {
       "name": "google_sign_in_ios",
-      "version": "5.9.0",
+      "version": "6.2.1",
       "dependencies": [
         "flutter",
         "google_sign_in_platform_interface"
@@ -357,7 +378,7 @@
     },
     {
       "name": "google_sign_in_android",
-      "version": "6.2.1",
+      "version": "7.2.0",
       "dependencies": [
         "flutter",
         "google_sign_in_platform_interface"
@@ -458,7 +479,7 @@
     },
     {
       "name": "cloud_firestore_web",
-      "version": "3.12.5",
+      "version": "5.0.2",
       "dependencies": [
         "_flutterfire_internals",
         "cloud_firestore_platform_interface",
@@ -471,7 +492,7 @@
     },
     {
       "name": "cloud_firestore_platform_interface",
-      "version": "6.2.5",
+      "version": "7.0.2",
       "dependencies": [
         "_flutterfire_internals",
         "collection",
@@ -667,31 +688,6 @@
       ]
     },
     {
-      "name": "plugin_platform_interface",
-      "version": "2.1.8",
-      "dependencies": [
-        "meta"
-      ]
-    },
-    {
-      "name": "firebase_core_web",
-      "version": "2.24.0",
-      "dependencies": [
-        "firebase_core_platform_interface",
-        "flutter",
-        "flutter_web_plugins",
-        "meta",
-        "web"
-      ]
-    },
-    {
-      "name": "js",
-      "version": "0.6.7",
-      "dependencies": [
-        "meta"
-      ]
-    },
-    {
       "name": "flutter_web_plugins",
       "version": "0.0.0",
       "dependencies": [
@@ -699,14 +695,29 @@
       ]
     },
     {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
       "name": "_flutterfire_internals",
-      "version": "1.3.35",
+      "version": "1.3.62",
       "dependencies": [
         "collection",
         "firebase_core",
         "firebase_core_platform_interface",
         "flutter",
         "meta"
+      ]
+    },
+    {
+      "name": "google_identity_services_web",
+      "version": "0.3.3+1",
+      "dependencies": [
+        "meta",
+        "web"
       ]
     },
     {

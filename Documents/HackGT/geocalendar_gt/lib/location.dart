@@ -4,17 +4,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geocalendar_gt/notification_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:geocalendar_gt/gt_buildings.dart';
 
 class LocationService {
   // The list of GT buildings is now a member of the class
-  final List<Map<String, dynamic>> gtBuildings = const [
-    {
-      'name': 'Klaus Advanced Computing Building',
-      'location': GeoPoint(33.7774, -84.3973),
-    },
-    {'name': 'Clough Commons', 'location': GeoPoint(33.7746, -84.3964)},
-    {'name': 'Student Center', 'location': GeoPoint(33.7738, -84.3988)},
-  ];
+  final List<GTBuilding> gtBuildings = kGtBuildings;
 
   final Set<String> _recentlyNotified = {};
   final Map<String, DateTime> _lastNotified = {};
@@ -55,7 +49,7 @@ class LocationService {
     );
   }
 
-  void startLocationListener() {
+  void startLocationListener({bool firebaseReady = false}) {
     final LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
       // smaller filter to be more responsive; geofencing recommended for production
@@ -63,7 +57,15 @@ class LocationService {
     );
 
     // start listening to Firestore reminders and keep local cache in sync
-    _subscribeReminders();
+    if (firebaseReady) {
+      try {
+        _subscribeReminders();
+      } catch (e) {
+        debugPrint('Skipping Firestore reminder subscription: $e');
+      }
+    } else {
+      debugPrint('Firebase not ready – skipping reminder subscription');
+    }
 
     Geolocator.getPositionStream(locationSettings: locationSettings).listen((
       Position position,
@@ -97,14 +99,14 @@ class LocationService {
             _reminderCache.add(reminder);
           }
           debugPrint('Reminders cache updated: ${_reminderCache.length} items');
-        });
+        }, onError: (e) => debugPrint('Reminder subscription error: $e'));
   }
 
   // 2. This function is now fixed and checks both lists
   Future<void> _checkReminders(Position userPosition) async {
     // --- Check against hardcoded GT Buildings ---
     for (final building in gtBuildings) {
-      final reminderPoint = building['location'] as GeoPoint;
+      final reminderPoint = GeoPoint(building.lat, building.lng);
       final double distanceInMeters = Geolocator.distanceBetween(
         userPosition.latitude,
         userPosition.longitude,
@@ -113,13 +115,13 @@ class LocationService {
       );
 
       if (distanceInMeters < 200) {
-        debugPrint('✅ User is close to (Hardcoded): "${building['name']}".');
-        final id = 'building:${building['name']}';
+        debugPrint('✅ User is close to (Hardcoded): "${building.name}".');
+        final id = 'building:${building.name}';
         if (!_recentlyNotified.contains(id)) {
           await NotificationService().showNotification(
             id.hashCode,
             'Nearby place',
-            'You are ${distanceInMeters.toStringAsFixed(0)}m from ${building['name']}',
+            'You are ${distanceInMeters.toStringAsFixed(0)}m from ${building.name}',
           );
           _recentlyNotified.add(id);
         }

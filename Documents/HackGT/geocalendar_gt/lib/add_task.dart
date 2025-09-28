@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geocalendar_gt/task_provider.dart';
 import 'package:geocalendar_gt/task.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geocalendar_gt/pick_on_map.dart';
+// Map picking removed; restricted to predefined buildings.
+import 'package:geocalendar_gt/gt_buildings.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geocalendar_gt/google_api_key.dart';
@@ -19,10 +19,8 @@ class AddTaskScreen extends StatefulWidget {
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final _title = TextEditingController();
   final _location = TextEditingController();
+  GTBuilding? _selectedBuilding;
   late TextEditingController _nlpController;
-  double? _pickedLat;
-  double? _pickedLng;
-  String? _pickedAddress;
 
   @override
   void initState() {
@@ -40,40 +38,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   Future<void> _submitManual() async {
     final t = _title.text.trim();
-    final l = _location.text.trim();
-    if (t.isEmpty || l.isEmpty) return;
+    if (t.isEmpty || _selectedBuilding == null) return;
     // Determine coordinates: prefer picked coordinates from the map picker,
     // otherwise parse coordinates typed into the location field, otherwise fallback
-    double lat;
-    double lng;
-    String locationText = l;
-
-    if (_pickedLat != null && _pickedLng != null) {
-      lat = _pickedLat!;
-      lng = _pickedLng!;
-      if (_pickedAddress != null && _pickedAddress!.isNotEmpty) {
-        locationText = _pickedAddress!;
-      }
-    } else {
-      // try parse "lat, lng"
-      final coordMatch = RegExp(
-        r"([-+]?[0-9]*\.?[0-9]+)\s*,\s*([-+]?[0-9]*\.?[0-9]+)",
-      ).firstMatch(l);
-      if (coordMatch != null) {
-        lat = double.tryParse(coordMatch.group(1)!) ?? 33.7756;
-        lng = double.tryParse(coordMatch.group(2)!) ?? -84.398;
-        // try reverse geocode to get an address
-        _pickedLat = lat;
-        _pickedLng = lng;
-        final addr = await _reverseGeocode(_pickedLat!, _pickedLng!);
-        if (addr != null) locationText = addr;
-      } else {
-        // fallback fake geocode
-        final id = const Uuid().v4();
-        lat = 33.774 + (id.hashCode % 100) / 10000.0;
-        lng = -84.3963 + (id.hashCode % 100) / 10000.0;
-      }
-    }
+    final lat = _selectedBuilding!.lat;
+    final lng = _selectedBuilding!.lng;
+    final locationText = _selectedBuilding!.name;
 
     if (!mounted) return;
     final id = const Uuid().v4();
@@ -95,9 +65,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
     _title.clear();
     _location.clear();
-    _pickedLat = null;
-    _pickedLng = null;
-    _pickedAddress = null;
+    setState(() => _selectedBuilding = null);
   }
 
   Future<void> _useNlp() async {
@@ -182,7 +150,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   Future<String?> _reverseGeocode(double lat, double lng) async {
     final url = Uri.https('maps.googleapis.com', '/maps/api/geocode/json', {
-      'latlng': '$lat,$lng',
+      'latlng': '$lat,$lng',
       'key': kGoogleMapsApiKey,
     });
     try {
@@ -236,37 +204,30 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            const Text('Manual input'),
+            const Text('Manual input (choose building)'),
             const SizedBox(height: 8),
             TextField(
               controller: _title,
               decoration: const InputDecoration(labelText: 'Task title'),
             ),
             const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () async {
-                // default near GT
-                final defaultLatLng = const LatLng(33.7756, -84.398);
-                final picked = await Navigator.push<LatLng?>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PickOnMapScreen(initial: defaultLatLng),
-                  ),
-                );
-                if (picked != null) {
-                  _location.text =
-                      '${picked.latitude.toStringAsFixed(6)}, ${picked.longitude.toStringAsFixed(6)}';
-                }
-              },
-              child: AbsorbPointer(
-                child: TextField(
-                  controller: _location,
-                  decoration: const InputDecoration(
-                    labelText: 'Location (tap to pick on map)',
-                    suffixIcon: Icon(Icons.location_on),
-                  ),
-                ),
+            DropdownButtonFormField<GTBuilding>(
+              decoration: const InputDecoration(
+                labelText: 'Building',
+                border: OutlineInputBorder(),
               ),
+              value: _selectedBuilding,
+              items: kGtBuildings
+                  .map(
+                    (b) => DropdownMenuItem(
+                      value: b,
+                      child: Text(b.name, overflow: TextOverflow.ellipsis),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (b) {
+                setState(() => _selectedBuilding = b);
+              },
             ),
             const SizedBox(height: 16),
             Row(

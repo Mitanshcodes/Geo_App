@@ -5,15 +5,45 @@ import 'package:geocalendar_gt/home_with_map.dart';
 import 'package:geocalendar_gt/add_task.dart';
 import 'package:geocalendar_gt/notification_service.dart';
 import 'package:geocalendar_gt/location.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+// After running `flutterfire configure`, this file will be generated.
+// ignore: unnecessary_import
+// import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize notifications
-  await NotificationService().init();
+  bool firebaseReady = false;
+  // Firebase initialization using generated options when available.
+  // Steps (once):
+  // 1. Run: dart pub global activate flutterfire_cli
+  // 2. Run: flutterfire configure -y -a com.example.geocalendar_gt (replace with real package id)
+  // 3. Uncomment the firebase_options import above.
+  try {
+    // If firebase_options.dart exists, prefer that; otherwise fall back to default (mobile may locate from native files)
+    // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp();
+    firebaseReady = true;
+  } catch (e) {
+    debugPrint('Firebase initialization skipped/failed: $e');
+  }
 
-  // Start location listener (it will check permissions itself)
-  LocationService().startLocationListener();
+  // Initialize notifications only on supported platforms (not web)
+  if (!kIsWeb) {
+    try {
+      await NotificationService().init();
+    } catch (e) {
+      debugPrint('Notification init failed: $e');
+    }
+  }
+
+  // Start location listener (guard Firestore usage internally)
+  try {
+    LocationService().startLocationListener(firebaseReady: firebaseReady);
+  } catch (e) {
+    debugPrint('Location listener failed: $e');
+  }
 
   runApp(const MyApp());
 }

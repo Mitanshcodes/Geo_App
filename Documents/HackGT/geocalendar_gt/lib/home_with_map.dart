@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:geocalendar_gt/task_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocalendar_gt/location.dart';
+import 'package:geocalendar_gt/email_scanner.dart';
 
 class HomeWithMap extends StatelessWidget {
   const HomeWithMap({super.key});
@@ -81,8 +82,25 @@ class HomeWithMap extends StatelessWidget {
                           ),
                         ),
                         IconButton(
+                          tooltip: 'Add Task',
                           onPressed: () => Navigator.pushNamed(context, '/add'),
                           icon: const Icon(Icons.add_circle_outline),
+                        ),
+                        IconButton(
+                          tooltip: 'Scan Gmail (Packages)',
+                          onPressed: () async {
+                            await EmailScanner().scanPackages(context);
+                            // Optionally show feedback
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Gmail scan completed'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.mark_email_unread_outlined),
                         ),
                       ],
                     ),
