@@ -84,9 +84,10 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        initialRoute: '/',
+        // Bypass login: start directly on home screen.
+        initialRoute: '/home',
         routes: {
-          '/': (c) => const LoginScreen(),
+          '/': (c) => const HomeWithMap(),
           '/home': (c) => const HomeWithMap(),
           '/add': (c) => const AddTaskScreen(),
         },
@@ -195,7 +196,8 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               if (_account != null && !_isLoading)
                 TextButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                  onPressed: () =>
+                      Navigator.pushReplacementNamed(context, '/home'),
                   child: const Text('Skip scanning'),
                 ),
             ],
