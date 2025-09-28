@@ -13,10 +13,15 @@ import 'package:geocalendar_gt/gt_buildings.dart';
 class EmailScanner {
   bool _initialized = false;
 
+  static const String _webClientId = 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com'; // TODO: replace
+
+  GoogleSignIn get _instance => GoogleSignIn.instance;
+
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
     try {
-      await GoogleSignIn.instance.initialize();
+      // Provide explicit clientId on web; native platforms ignore it.
+      await _instance.initialize(clientId: _webClientId);
       _initialized = true;
     } catch (e) {
       debugPrint('GoogleSignIn initialize failed: $e');
@@ -33,11 +38,11 @@ class EmailScanner {
     await _ensureInitialized();
     try {
       // First attempt a lightweight restore (may be immediate or null)
-      final lightweight = await GoogleSignIn.instance
+      final lightweight = await _instance
           .attemptLightweightAuthentication(reportAllExceptions: false);
       if (lightweight != null) return lightweight;
       // Fallback to full interactive authenticate specifying scope hints
-      final account = await GoogleSignIn.instance.authenticate(
+      final account = await _instance.authenticate(
         scopeHint: scopes,
       );
       return account;
@@ -59,7 +64,7 @@ class EmailScanner {
     if (account == null) return;
 
     // Acquire authorization headers (contains access token) for Gmail scope.
-    final authClient = GoogleSignIn.instance.authorizationClient;
+  final authClient = _instance.authorizationClient;
     final authHeaders = await authClient.authorizationHeaders([
       'https://www.googleapis.com/auth/gmail.readonly',
     ], promptIfNecessary: true);
