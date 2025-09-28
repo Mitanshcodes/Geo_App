@@ -7,6 +7,8 @@ import 'package:geocalendar_gt/notification_service.dart';
 import 'package:geocalendar_gt/location.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:geocalendar_gt/email_scanner.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 // After running `flutterfire configure`, this file will be generated.
 // ignore: unnecessary_import
 // import 'firebase_options.dart';
@@ -93,11 +95,75 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _isLoading = false;
+  GoogleSignInAccount? _account;
+  bool _scanAsked = false; // prevents re-prompt loops
+
+  Future<void> _googleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      final scanner = EmailScanner();
+      _account = await scanner.signInBasic();
+    } catch (e) {
+      debugPrint('Google sign-in failed: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _promptScan() async {
+    if (_account == null || _scanAsked) return;
+    _scanAsked = true;
+    final consent = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Scan Gmail for tasks?'),
+        content: const Text(
+          'We can scan recent emails (read-only) to auto-create reminders for packages and other tasks. Do you want to allow this now?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Not now'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Scan'),
+          ),
+        ],
+      ),
+    );
+    if (consent == true) {
+      setState(() => _isLoading = true);
+      try {
+        final scanner = EmailScanner();
+        await scanner.scanPackages(context);
+      } catch (e) {
+        debugPrint('Scan failed: $e');
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // If signed in and not yet asked about scanning, schedule dialog.
+    if (_account != null && !_scanAsked) {
+      // schedule after build
+      WidgetsBinding.instance.addPostFrameCallback((_) => _promptScan());
+    }
     return Scaffold(
       body: Center(
         child: Padding(
@@ -108,31 +174,30 @@ class LoginScreen extends StatelessWidget {
               const Icon(Icons.location_on, size: 80, color: Colors.blueAccent),
               const SizedBox(height: 16),
               const Text(
-                "Welcome to GeoRemind",
+                'Welcome to GeoRemind',
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 32),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: hook up Google sign-in
-                  Navigator.pushReplacementNamed(context, '/home');
-                },
-                icon: const Icon(Icons.login),
-                label: const Text("Continue with Google"),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
+              if (_isLoading) ...[
+                const CircularProgressIndicator(),
+              ] else if (_account == null) ...[
+                ElevatedButton.icon(
+                  onPressed: _googleLogin,
+                  icon: const Icon(Icons.login),
+                  label: const Text('Sign in with Google'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () {
-                  // TODO: Email login
-                },
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
+              ] else ...[
+                const Text('Signed in. Preparing email scan prompt...'),
+              ],
+              const SizedBox(height: 16),
+              if (_account != null && !_isLoading)
+                TextButton(
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                  child: const Text('Skip scanning'),
                 ),
-                child: const Text("Sign in with Email"),
-              ),
             ],
           ),
         ),

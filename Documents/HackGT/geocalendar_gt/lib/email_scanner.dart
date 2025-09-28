@@ -23,6 +23,12 @@ class EmailScanner {
     }
   }
 
+  /// Perform a basic Google sign-in (no Gmail scope yet) to gate app access.
+  /// Returns the signed-in account or null if user aborted.
+  Future<GoogleSignInAccount?> signInBasic() async {
+    return _signInInteractive(const ['email', 'openid']);
+  }
+
   Future<GoogleSignInAccount?> _signInInteractive(List<String> scopes) async {
     await _ensureInitialized();
     try {
